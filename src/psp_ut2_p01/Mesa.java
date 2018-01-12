@@ -1,39 +1,45 @@
 package psp_ut2_p01;
 
-import java.util.ArrayList;
-
 public class Mesa {
-		
-	private String ingrediente1;
-	private String ingrediente2;
-	private boolean mesaLibre = true;	
 
-	public Mesa(String ingrediente1, String ingrediente2) {
-		super();
-		this.ingrediente1 = ingrediente1;
-		this.ingrediente2 = ingrediente2;
-	}
+	private int id;
+	private int ingr;
+	private String nombreIngrediente;
+	private boolean fumando = false;
+	private boolean ingrMesa = false;
 
-	public synchronized void nuevosIngredientes(String ingr) throws InterruptedException{
-		
-		if(ingrediente1.equals(ingr)||ingrediente2.equals(ingr)){
+	public synchronized void nuevosIngredientes(int ingr) throws InterruptedException {
+
+		while (fumando || ingrMesa) 
 			wait();
-		}else{
-			System.out.println("Agente pone en la mesa " + ingr);
-			notify();
-		}		
+			this.ingr = ingr;
+			ingrMesa = true;
+			if (ingr == 0) {
+				nombreIngrediente = "tabaco";
+			} else if (ingr == 1) {
+				nombreIngrediente = "papel";
+			} else {
+				nombreIngrediente = "cerillas";
+			}
+			System.out.println("\n\nAgente pone en la mesa " + nombreIngrediente);
+			notifyAll();
+		
 	}
-	
-	public synchronized void quieroFumar(int id) throws InterruptedException{
-		wait();
-        System.out.println("Fumador " + id + " empieza a fumar");
-        mesaLibre = false;
+
+	public synchronized void quieroFumar(int id) throws InterruptedException {
+
+		while (!ingrMesa || fumando || ingr != id) 
+			wait();
+			System.out.println("Fumador   " + id + " empieza a fumar");		
+		
+		ingrMesa = false;
+		fumando = true;
 	}
-	
-	public synchronized void finFumar(int id){
-		mesaLibre = true;
-        System.out.println("Fumador " + id + " termina de fumar");
-        notify();
+
+	public synchronized void finFumar(int id) {
+		fumando = false;
+		System.out.println("Fumador   " + id + " termina de fumar");
+		notifyAll();
 	}
 
 }
